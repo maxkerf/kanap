@@ -10,7 +10,7 @@ if (searchParams.has("id")) {
 			.then(product => {
 				document.querySelector(".item").innerHTML = `<article>
           <div class="item__img">
-            <img src=${product.imageUrl} alt=${product.altTxt}>
+            <img src=${product.imageUrl} alt="${product.altTxt}">
           </div>
           <div class="item__content">
             <div class="item__content__titlePrice">
