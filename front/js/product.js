@@ -1,13 +1,23 @@
-const url = new URL(window.location.href);
-const searchParams = new URLSearchParams(url.search);
+const searchParams = new URLSearchParams(window.location.search);
 
 if (searchParams.has("id")) {
 	const id = searchParams.get("id");
 
 	loadConfig().then(config => {
 		fetch(config.host + "/api/products/" + id)
-			.then(response => response.json())
+			.then(response => {
+				if (response.ok) {
+					return response.json();
+				} else {
+					document.querySelector(".item").innerHTML =
+						"Oups, produit introuvable...";
+
+					throw "Product not found";
+				}
+			})
 			.then(product => {
+				document.title = product.name;
+
 				document.querySelector(".item").innerHTML = `<article>
           <div class="item__img">
             <img src=${product.imageUrl} alt="${product.altTxt}">
@@ -27,7 +37,7 @@ if (searchParams.has("id")) {
               <div class="item__content__settings__color">
                 <label for="color-select">Choisir une couleur :</label>
                 <select name="color-select" id="colors">
-                  <option value="">--SVP, choisissez une couleur --</option>
+                  <!-- <option value="">--SVP, choisissez une couleur --</option> -->
                   ${product.colors
 										.map(
 											color =>
@@ -46,7 +56,7 @@ if (searchParams.has("id")) {
                   name="itemQuantity"
                   min="1"
                   max="100"
-                  value="0"
+                  value="1"
                   id="quantity"
                 />
               </div>
@@ -57,6 +67,16 @@ if (searchParams.has("id")) {
             </div>
           </div>
         </article>`;
+
+				const cart = new Cart();
+
+				document.querySelector("#addToCart").addEventListener("click", () => {
+					cart.addProduct({
+						id: id,
+						color: document.querySelector("#colors").value,
+						quantity: Number(document.querySelector("#quantity").value),
+					});
+				});
 			})
 			.catch(err => console.log("Error detected: " + err));
 	});
