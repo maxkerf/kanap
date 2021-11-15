@@ -1,39 +1,35 @@
-class Cart {
-	constructor() {
-		this.products =
-			localStorage.getItem("kanap-cart") === null
-				? []
-				: JSON.parse(localStorage.getItem("kanap-cart"));
-	}
+const cart = new Cart();
 
-	addProduct(productToAdd) {
-		if (this.hasProduct(productToAdd)) {
-			const product = this.getProduct(productToAdd);
+cart.products.forEach(product => {
+	const color = product.color;
+	const quantity = product.quantity;
 
-			if (productToAdd.quantity >= 1 && productToAdd.quantity <= 100) {
-				product.quantity + productToAdd.quantity <= 100
-					? (product.quantity += productToAdd.quantity)
-					: (product.quantity = 100);
-			}
-		} else {
-			this.products.push(productToAdd);
-		}
-
-		this.save(this.products);
-	}
-
-	getProduct(productToAdd) {
-		return this.products.find(
-			product =>
-				product.id === productToAdd.id && product.color === productToAdd.color
-		);
-	}
-
-	hasProduct(productToAdd) {
-		return this.getProduct(productToAdd);
-	}
-
-	save() {
-		localStorage.setItem("kanap-cart", JSON.stringify(this.products));
-	}
-}
+	loadConfig().then(config => {
+		fetch(config.host + "/api/products/" + product.id)
+			.then(response => response.json())
+			.then(product => {
+				document.querySelector(
+					"#cart__items"
+				).innerHTML += `<article class="cart__item" data-id="${product.id}">
+                      <div class="cart__item__img">
+                        <img src=${product.imageUrl} alt="${product.altTxt}">
+                      </div>
+                      <div class="cart__item__content">
+                        <div class="cart__item__content__titlePrice">
+                          <h2>${product.name + " " + color}</h2>
+                          <p>${product.price} €</p>
+                        </div>
+                        <div class="cart__item__content__settings">
+                          <div class="cart__item__content__settings__quantity">
+                            <p>Quantité : </p>
+                            <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value=${quantity}>
+                          </div>
+                          <div class="cart__item__content__settings__delete">
+                            <p class="deleteItem">Supprimer</p>
+                          </div>
+                        </div>
+                      </div>
+                    </article>`;
+			});
+	});
+});
