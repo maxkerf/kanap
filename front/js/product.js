@@ -12,10 +12,12 @@ if (searchParams.has("id")) {
 					document.querySelector(".item").innerHTML =
 						"Oups, produit introuvable...";
 
-					throw "Product not found";
+					throw "product not found";
 				}
 			})
-			.then(product => {
+			.then(object => {
+				const product = new Product(object);
+
 				document.title = product.name;
 
 				document.querySelector(".item").innerHTML = `<article>
@@ -68,16 +70,30 @@ if (searchParams.has("id")) {
           </div>
         </article>`;
 
-				const cart = new Cart();
-
-				document.querySelector("#addToCart").addEventListener("click", () => {
-					cart.addProduct({
-						id: id,
-						color: document.querySelector("#colors").value,
-						quantity: Number(document.querySelector("#quantity").value),
-					});
-				});
+				manageQuantityInput();
+				manageCart(product._id);
 			})
 			.catch(err => console.log("Error detected: " + err));
+	});
+}
+
+function manageQuantityInput() {
+	const quantityInput = document.querySelector("#quantity");
+
+	quantityInput.addEventListener("change", () => {
+		if (quantityInput.value < 1) quantityInput.value = 1;
+		else if (quantityInput.value > 100) quantityInput.value = 100;
+	});
+}
+
+function manageCart(id) {
+	const cart = new Cart();
+
+	document.querySelector("#addToCart").addEventListener("click", () => {
+		cart.addProduct({
+			id: id,
+			color: document.querySelector("#colors").value,
+			quantity: Number(document.querySelector("#quantity").value),
+		});
 	});
 }

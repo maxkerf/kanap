@@ -7,30 +7,35 @@ class Cart {
 	}
 
 	addProduct(productToAdd) {
-		if (this.hasProduct(productToAdd)) {
-			const product = this.getProduct(productToAdd);
+		if (this.hasProduct(productToAdd.id, productToAdd.color)) {
+			const product = this.getProduct(productToAdd.id, productToAdd.color);
 
-			if (productToAdd.quantity >= 1 && productToAdd.quantity <= 100) {
-				product.quantity + productToAdd.quantity <= 100
-					? (product.quantity += productToAdd.quantity)
-					: (product.quantity = 100);
-			}
+			product.quantity + productToAdd.quantity <= 100
+				? (product.quantity += productToAdd.quantity)
+				: (product.quantity = 100);
 		} else {
 			this.products.push(productToAdd);
 		}
 
-		this.save(this.products);
+		this.save();
 	}
 
-	getProduct(productToAdd) {
+	removeProduct(id, color) {
+		const product = this.getProduct(id, color);
+
+		this.products.splice(this.products.indexOf(product), 1);
+
+		this.save();
+	}
+
+	getProduct(id, color) {
 		return this.products.find(
-			product =>
-				product.id === productToAdd.id && product.color === productToAdd.color
+			product => product.id === id && product.color === color
 		);
 	}
 
-	hasProduct(productToAdd) {
-		return this.getProduct(productToAdd);
+	hasProduct(id, color) {
+		return this.getProduct(id, color);
 	}
 
 	save() {
