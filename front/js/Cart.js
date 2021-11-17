@@ -1,22 +1,5 @@
 const cart = new Cart();
 
-/* async function requests(config) {
-	return await Promise.all(
-		cart.products.map(product =>
-			fetch(config.host + "/api/products/" + product.id)
-		)
-	);
-}
-
-loadConfig().then(config =>
-	requests(config).then(results => {
-		console.log(results);
-		results.forEach(result =>
-			result.json().then(product => console.log(product))
-		);
-	})
-); */
-
 loadConfig().then(config => {
 	fetch(config.host + "/api/products/")
 		.then(res => res.json())
@@ -102,6 +85,7 @@ function manageDeleteButtons(products) {
 			cartItem.remove();
 			cart.removeProduct(cartItem.dataset.id, cartItem.dataset.color);
 			updateCartPrice(products);
+			alert("Le produit a bien été retiré de votre panier !");
 		});
 	});
 }
@@ -126,3 +110,45 @@ function updateTotalPrice(products) {
 
 	document.querySelector("#totalPrice").innerHTML = total;
 }
+
+document.querySelector("form").addEventListener("submit", e => {
+	e.preventDefault();
+
+	let valid = true;
+
+	document.querySelectorAll("form input").forEach(input => {
+		if (!input.reportValidity()) {
+			document.querySelector("#firstNameErrorMsg").innerHTML = "Erreur !";
+		}
+		valid &= input.reportValidity();
+	});
+
+	if (valid) {
+		const contact = {
+			firstName: document.querySelector("#firstName").value,
+			lastName: document.querySelector("#lastName").value,
+			address: document.querySelector("#address").value,
+			city: document.querySelector("#city").value,
+			email: document.querySelector("#email").value,
+		};
+
+		const products = cart.products.map(product => product.id);
+
+		loadConfig().then(config => {
+			fetch(config.host + "/api/products/order", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ contact, products }),
+			})
+				.then(res => res.json())
+				.then(object => {
+					console.log(object);
+					console.log(object.orderId);
+					window.location = "./confirmation.html?orderId=" + object.orderId;
+				})
+				.catch(err => console.log("Error detected: " + err));
+		});
+	}
+});

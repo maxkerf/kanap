@@ -95,5 +95,6 @@ function manageCart(id) {
 			color: document.querySelector("#colors").value,
 			quantity: Number(document.querySelector("#quantity").value),
 		});
+		alert("Le produit a bien été ajouté à votre panier !");
 	});
 }
