@@ -1,14 +1,18 @@
 class Cart {
-	constructor() {
-		this.products =
-			localStorage.getItem("kanap-cart") === null
-				? []
-				: JSON.parse(localStorage.getItem("kanap-cart"));
+	constructor(object) {
+		// check if object is null or not
+		Object.assign(
+			this,
+			object ? object : { products: [], totalQuantity: 0, totalPrice: 0 }
+		);
 	}
 
 	addProduct(productToAdd) {
-		if (this.hasProduct(productToAdd.id, productToAdd.color)) {
-			const product = this.getProduct(productToAdd.id, productToAdd.color);
+		const id = productToAdd.id;
+		const color = productToAdd.color;
+
+		if (this.hasProduct(id, color)) {
+			const product = this.getProduct(id, color);
 
 			product.quantity + productToAdd.quantity <= 100
 				? (product.quantity += productToAdd.quantity)
@@ -17,15 +21,17 @@ class Cart {
 			this.products.push(productToAdd);
 		}
 
-		this.save();
+		return this.getProduct(id, color);
 	}
 
 	removeProduct(id, color) {
 		const product = this.getProduct(id, color);
-
 		this.products.splice(this.products.indexOf(product), 1);
+	}
 
-		this.save();
+	updateTotals(price, initialQuantity, currentQuantity) {
+		this.totalQuantity = this.products.length;
+		this.totalPrice += price * (currentQuantity - initialQuantity);
 	}
 
 	getProduct(id, color) {
@@ -38,7 +44,20 @@ class Cart {
 		return this.getProduct(id, color);
 	}
 
+	resetCart() {
+		this.products.length = 0;
+		this.totalQuantity = 0;
+		this.totalPrice = 0;
+	}
+
 	save() {
-		localStorage.setItem("kanap-cart", JSON.stringify(this.products));
+		localStorage.setItem(
+			"kanap-cart",
+			JSON.stringify({
+				products: this.products,
+				totalQuantity: this.totalQuantity,
+				totalPrice: this.totalPrice,
+			})
+		);
 	}
 }
