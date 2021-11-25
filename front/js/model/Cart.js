@@ -1,10 +1,7 @@
 class Cart {
 	constructor(object) {
 		// check if object is null or not
-		Object.assign(
-			this,
-			object ? object : { products: [], totalQuantity: 0, totalPrice: 0 }
-		);
+		object ? Object.assign(this, object) : this.emptyCart();
 	}
 
 	addProduct(productToAdd) {
@@ -44,10 +41,8 @@ class Cart {
 		return this.getProduct(id, color);
 	}
 
-	resetCart() {
-		this.products.length = 0;
-		this.totalQuantity = 0;
-		this.totalPrice = 0;
+	emptyCart() {
+		Object.assign(this, { products: [], totalQuantity: 0, totalPrice: 0 });
 	}
 
 	save() {

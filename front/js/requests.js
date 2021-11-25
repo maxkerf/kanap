@@ -27,3 +27,11 @@ async function postOrder(order) {
 
 	return data;
 }
+
+async function getCart() {
+	const config = await loadConfig();
+	const item = localStorage.getItem(config.keyCart);
+	const data = JSON.parse(item);
+
+	return data;
+}

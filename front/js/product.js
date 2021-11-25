@@ -1,44 +1,5 @@
 const productContainer = document.querySelector(".item");
 
-const cart = new Cart(JSON.parse(localStorage.getItem("kanap-cart")));
-
-function manageQuantityInput() {
-	const quantityInput = document.querySelector("#quantity");
-
-	quantityInput.onchange = () => {
-		if (quantityInput.value < 1) quantityInput.value = 1;
-		else if (quantityInput.value > 100) quantityInput.value = 100;
-	};
-}
-
-function manageCart(product) {
-	const addToCartButton = document.querySelector("#addToCart");
-	const colorInput = document.querySelector("#colors");
-	const quantityInput = document.querySelector("#quantity");
-
-	addToCartButton.onclick = () => {
-		const id = product._id;
-		const color = colorInput.value;
-		const quantity = Number(quantityInput.value);
-
-		const initialQuantity = cart.hasProduct(id, color)
-			? cart.getProduct(id, color).quantity
-			: 0;
-
-		const productAdded = cart.addProduct({
-			id: id,
-			color: color,
-			quantity: quantity,
-		});
-
-		cart.updateTotals(product.price, initialQuantity, productAdded.quantity);
-
-		cart.save();
-
-		alert("Le produit a bien été ajouté à votre panier !");
-	};
-}
-
 function display(product) {
 	const colors = product.colors
 		.map(color => "<option value=" + color + ">" + color + "</option>")
@@ -46,7 +7,7 @@ function display(product) {
 
 	productContainer.innerHTML = `<article>
 			<div class="item__img">
-				<img src=${product.imageUrl} alt="${product.altTxt}">
+				<img src=${rewriteImageUrl(product.imageUrl, "large")} alt="${product.altTxt}">
 			</div>
 			<div class="item__content">
 				<div class="item__content__titlePrice">
@@ -89,10 +50,52 @@ function display(product) {
 		</article>`;
 }
 
+function manageQuantityInput() {
+	const quantityInput = document.querySelector("#quantity");
+
+	quantityInput.onchange = () => checkQuantityInput(quantityInput);
+}
+
+function manageCart(cart, product) {
+	const addToCartButton = document.querySelector("#addToCart");
+	const colorInput = document.querySelector("#colors");
+	const quantityInput = document.querySelector("#quantity");
+
+	addToCartButton.onclick = () => {
+		const id = product._id;
+		const color = colorInput.value;
+		const quantity = Number(quantityInput.value);
+
+		const initialQuantity = cart.hasProduct(id, color)
+			? cart.getProduct(id, color).quantity
+			: 0;
+
+		const productAdded = cart.addProduct({
+			id: id,
+			color: color,
+			quantity: quantity,
+		});
+
+		cart.updateTotals(product.price, initialQuantity, productAdded.quantity);
+		updateCartLink(cart.totalQuantity);
+
+		cart.save();
+
+		sendMessageToUser("Le produit a bien été ajouté à votre panier !");
+	};
+}
+
 async function main() {
 	const searchParams = new URLSearchParams(window.location.search);
+	const product = new Product(await getProductById(searchParams.get("id")));
+	const cart = new Cart(await getCart());
 
-	if (searchParams.has("id")) {
+	display(product);
+	updateCartLink(cart.totalQuantity);
+	manageQuantityInput();
+	manageCart(cart, product);
+
+	/* if (searchParams.has("id")) {
 		const object = await getProductById(searchParams.get("id"));
 
 		// check if object is empty or not
@@ -100,6 +103,7 @@ async function main() {
 			const product = new Product(object);
 
 			display(product);
+			updateCartLink();
 			manageQuantityInput();
 			manageCart(product);
 		} else {
@@ -107,7 +111,7 @@ async function main() {
 		}
 	} else {
 		productContainer.innerHTML = "Oups, aucun produit sélectionné...";
-	}
+	} */
 }
 
 main();

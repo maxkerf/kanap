@@ -4,15 +4,13 @@ const totalPriceDisplayer = document.querySelector("#totalPrice");
 const firstNameInput = document.querySelector("#firstName");
 const firstNameErrorMsg = document.querySelector("#firstNameErrorMsg");
 
-const cart = new Cart(JSON.parse(localStorage.getItem("kanap-cart")));
-
 function display(products) {
 	products.forEach(product => {
 		productsContainer.innerHTML += `<article class="cart__item" data-id=${
 			product.id
 		} data-color=${product.color}>
 			<div class="cart__item__img">
-				<img src=${product.imageUrl} alt="${product.altTxt}">
+				<img src=${rewriteImageUrl(product.imageUrl, "medium")} alt="${product.altTxt}">
 			</div>
 			<div class="cart__item__content">
 				<div class="cart__item__content__titlePrice">
@@ -35,13 +33,12 @@ function display(products) {
 	});
 }
 
-function manageQuantityInputs(productManager) {
+function manageQuantityInputs(cart, productManager) {
 	const quantityInputs = document.querySelectorAll(".itemQuantity");
 
 	quantityInputs.forEach(quantityInput => {
 		quantityInput.onchange = () => {
-			if (quantityInput.value < 1) quantityInput.value = 1;
-			else if (quantityInput.value > 100) quantityInput.value = 100;
+			checkQuantityInput(quantityInput);
 
 			const productContainer = quantityInput.closest(".cart__item");
 			const id = productContainer.dataset.id;
@@ -56,14 +53,14 @@ function manageQuantityInputs(productManager) {
 				initialQuantity,
 				productInCart.quantity
 			);
-			updateTotalDisplayers();
+			updateTotalDisplayers(cart);
 
 			cart.save();
 		};
 	});
 }
 
-function manageDeleteButtons(productManager) {
+function manageDeleteButtons(cart, productManager) {
 	const deleteButtons = document.querySelectorAll(".deleteItem");
 
 	deleteButtons.forEach(deleteButton => {
@@ -81,21 +78,22 @@ function manageDeleteButtons(productManager) {
 				initialQuantity,
 				0
 			);
-			updateTotalDisplayers();
+			updateTotalDisplayers(cart);
 
 			cart.save();
 
-			alert("Le produit a bien été retiré de votre panier !");
+			sendMessageToUser("Le produit a bien été retiré de votre panier !");
 		};
 	});
 }
 
-function updateTotalDisplayers() {
+function updateTotalDisplayers(cart) {
 	totalQuantityDisplayer.innerHTML = cart.totalQuantity;
 	totalPriceDisplayer.innerHTML = cart.totalPrice;
+	updateCartLink(cart.totalQuantity);
 }
 
-function manageForm() {
+function manageForm(cart) {
 	document.querySelectorAll("form input").forEach(input => {
 		input.onchange = () => {
 			if (input.checkValidity()) input.nextElementSibling.innerHTML = "";
@@ -130,7 +128,7 @@ function manageForm() {
 
 			const object = await postOrder({ contact, products });
 
-			cart.resetCart();
+			cart.emptyCart();
 			cart.save();
 
 			window.location = "./confirmation.html?orderId=" + object.orderId;
@@ -139,6 +137,7 @@ function manageForm() {
 }
 
 async function main() {
+	const cart = new Cart(await getCart());
 	const promises = cart.products.map(product => getProductById(product.id));
 	const objects = await Promise.all(promises);
 	const productManager = new ProductManager(objects);
@@ -157,10 +156,10 @@ async function main() {
 	}
 
 	display(productsToDisplay);
-	updateTotalDisplayers();
-	manageQuantityInputs(productManager);
-	manageDeleteButtons(productManager);
-	manageForm();
+	updateTotalDisplayers(cart);
+	manageQuantityInputs(cart, productManager);
+	manageDeleteButtons(cart, productManager);
+	manageForm(cart);
 }
 
 main();
