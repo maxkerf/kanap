@@ -87,7 +87,9 @@ function manageCart(cart, product) {
 
 async function main() {
 	const searchParams = new URLSearchParams(window.location.search);
-	const product = new Product(await getProductById(searchParams.get("id")));
+	const product = new Product(
+		await getProductById(searchParams.get("id")).catch(console.error)
+	);
 	const cart = new Cart(await getCart());
 
 	display(product);

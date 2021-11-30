@@ -24,8 +24,9 @@ function sendMessageToUser(message) {
 }
 
 function updateCartLink(totalQuantity) {
-	document.querySelector("#cart-link").innerHTML =
-		"Panier" + (totalQuantity ? " (" + totalQuantity + ")" : "");
+	document.querySelector("#cart-link span").innerHTML = totalQuantity
+		? ` (${totalQuantity})`
+		: "";
 }
 
 function rewriteImageUrl(imageUrl, size) {

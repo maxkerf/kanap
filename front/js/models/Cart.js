@@ -27,8 +27,10 @@ class Cart {
 	}
 
 	updateTotals(price, initialQuantity, currentQuantity) {
-		this.totalQuantity = this.products.length;
-		this.totalPrice += price * (currentQuantity - initialQuantity);
+		const quantityDifference = currentQuantity - initialQuantity;
+
+		this.totalQuantity += quantityDifference;
+		this.totalPrice += price * quantityDifference;
 	}
 
 	getProduct(id, color) {

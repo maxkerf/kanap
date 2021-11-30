@@ -1,14 +1,15 @@
 const productsContainer = document.querySelector("#cart__items");
 const totalQuantityDisplayer = document.querySelector("#totalQuantity");
 const totalPriceDisplayer = document.querySelector("#totalPrice");
-const firstNameInput = document.querySelector("#firstName");
-const firstNameErrorMsg = document.querySelector("#firstNameErrorMsg");
 
 function display(products) {
-	products.forEach(product => {
-		productsContainer.innerHTML += `<article class="cart__item" data-id=${
-			product.id
-		} data-color=${product.color}>
+	if (products.length) {
+		productsContainer.innerHTML = `<div class="empty-cart-btn">Vider le panier</div>`;
+
+		products.forEach(product => {
+			productsContainer.innerHTML += `<article class="cart__item" data-id=${
+				product.id
+			} data-color=${product.color}>
 			<div class="cart__item__img">
 				<img src=${rewriteImageUrl(product.imageUrl, "medium")} alt="${product.altTxt}">
 			</div>
@@ -30,7 +31,10 @@ function display(products) {
 				</div>
 			</div>
 		</article>`;
-	});
+		});
+
+		productsContainer.innerHTML += `<div class="empty-cart-btn">Vider le panier</div>`;
+	}
 }
 
 function manageQuantityInputs(cart, productManager) {
@@ -87,37 +91,38 @@ function manageDeleteButtons(cart, productManager) {
 	});
 }
 
+function manageEmptyCartButtons(cart) {
+	document.querySelectorAll(".empty-cart-btn").forEach(
+		btn =>
+			(btn.onclick = () => {
+				cart.emptyCart();
+
+				document
+					.querySelectorAll(".cart__item, .empty-cart-btn")
+					.forEach(el => el.remove());
+
+				updateTotalDisplayers(cart);
+
+				cart.save();
+			})
+	);
+}
+
 function updateTotalDisplayers(cart) {
 	totalQuantityDisplayer.innerHTML = cart.totalQuantity;
-	totalPriceDisplayer.innerHTML = cart.totalPrice;
+	totalPriceDisplayer.innerHTML = cart.totalPrice.toLocaleString();
 	updateCartLink(cart.totalQuantity);
 }
 
 function manageForm(cart) {
-	document.querySelectorAll("form input").forEach(input => {
-		input.onchange = () => {
-			if (input.checkValidity()) input.nextElementSibling.innerHTML = "";
-		};
-		input.oninvalid = () =>
-			(input.nextElementSibling.innerHTML = "Champ requis invalide.");
-	});
-
-	firstNameInput.oninvalid = () => {
-		firstNameErrorMsg.innerHTML = "Le prénom ne doit pas contenir de chiffres.";
-	};
-
 	document.querySelector("form").onsubmit = async e => {
 		e.preventDefault();
 
-		let valid = true;
+		customFirstNameInputValidation();
 
-		document.querySelectorAll("form input").forEach(input => {
-			valid &= input.reportValidity();
-		});
-
-		if (valid) {
+		if (isFormValid()) {
 			const contact = {
-				firstName: firstNameInput.value,
+				firstName: document.querySelector("#firstName").value,
 				lastName: document.querySelector("#lastName").value,
 				address: document.querySelector("#address").value,
 				city: document.querySelector("#city").value,
@@ -126,7 +131,9 @@ function manageForm(cart) {
 
 			const products = cart.products.map(product => product.id);
 
-			const object = await postOrder({ contact, products });
+			const object = await postOrder({ contact, products }).catch(
+				console.error
+			);
 
 			cart.emptyCart();
 			cart.save();
@@ -136,11 +143,47 @@ function manageForm(cart) {
 	};
 }
 
+function customFirstNameInputValidation() {
+	const firstNameInput = document.querySelector("#firstName");
+	const validityState = firstNameInput.validity;
+
+	if (validityState.patternMismatch) {
+		firstNameInput.setCustomValidity(
+			"Le prénom ne doit pas contenir de chiffres."
+		);
+	} else {
+		firstNameInput.setCustomValidity("");
+	}
+}
+
+function isFormValid() {
+	let validForm = true;
+	let focusedInput = false;
+
+	document.querySelectorAll("form input:not([type=submit])").forEach(input => {
+		const validInput = input.checkValidity();
+
+		input.nextElementSibling.innerHTML = !validInput
+			? input.validationMessage
+			: "";
+
+		validForm &= validInput;
+
+		if (!validForm && !focusedInput) {
+			input.focus();
+			focusedInput = true;
+		}
+	});
+
+	return validForm;
+}
+
 async function main() {
 	const cart = new Cart(await getCart());
 	const promises = cart.products.map(product => getProductById(product.id));
-	const objects = await Promise.all(promises);
-	const productManager = new ProductManager(objects);
+	const productManager = new ProductManager(
+		await Promise.all(promises).catch(console.error)
+	);
 	const productsToDisplay = [];
 
 	for (let i = 0; i < cart.products.length; i++) {
@@ -159,6 +202,7 @@ async function main() {
 	updateTotalDisplayers(cart);
 	manageQuantityInputs(cart, productManager);
 	manageDeleteButtons(cart, productManager);
+	manageEmptyCartButtons(cart);
 	manageForm(cart);
 }
 

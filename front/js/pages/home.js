@@ -15,7 +15,9 @@ function display(products) {
 }
 
 async function main() {
-	const productManager = new ProductManager(await getAllProducts());
+	const productManager = new ProductManager(
+		await getAllProducts().catch(console.error)
+	);
 	const cart = new Cart(await getCart());
 
 	display(productManager.products);
