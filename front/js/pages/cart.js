@@ -217,7 +217,7 @@ function manageForm(cart) {
 				email: document.querySelector("#email").value,
 			};
 
-			const products = cart.products.map(product => product.id);
+			const products = cart.products.map(cartProduct => cartProduct.productId);
 
 			const order = await postOrder({ contact, products }).catch(console.error);
 
