@@ -14,7 +14,7 @@ function display(cartProducts, productManager) {
 			const product = productManager.getProduct(productId);
 			const imageUrl = rewriteImageUrl(product.imageUrl, "medium");
 
-			productsContainer.innerHTML += `<article class="cart__item" data-productId=${productId} data-color=${
+			productsContainer.innerHTML += `<article class="cart__item" data-id=${productId} data-color=${
 				cartProduct.color
 			}>
 			<div class="cart__item__img">
@@ -57,7 +57,7 @@ function manageQuantityInputs(cart, productManager) {
 			checkQuantityInput(quantityInput);
 
 			const productContainer = quantityInput.closest(".cart__item");
-			const productId = productContainer.dataset.productId;
+			const productId = productContainer.dataset.id;
 			const color = productContainer.dataset.color;
 
 			const cartProduct = cart.getProduct(productId, color);
@@ -87,9 +87,8 @@ function manageDeleteButtons(cart, productManager) {
 	deleteButtons.forEach(deleteButton => {
 		deleteButton.onclick = () => {
 			const productContainer = deleteButton.closest(".cart__item");
-			const productId = productContainer.dataset.productId;
+			const productId = productContainer.dataset.id;
 			const color = productContainer.dataset.color;
-
 			const initialQuantity = cart.getProduct(productId, color).quantity;
 			cart.removeProduct(productId, color);
 			productContainer.remove();
