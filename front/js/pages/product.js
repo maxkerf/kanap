@@ -1,13 +1,18 @@
-const productContainer = document.querySelector(".item");
-
+/**
+ * Display the product on the page and change the page title.
+ * @param {Product} product - The product to display.
+ */
 function display(product) {
+	const productContainer = document.querySelector(".item");
+	const imageUrl = rewriteImageUrl(product.imageUrl, "large");
 	const colors = product.colors
 		.map(color => "<option value=" + color + ">" + color + "</option>")
 		.join("\n");
 
+	document.title = product.name;
 	productContainer.innerHTML = `<article>
 			<div class="item__img">
-				<img src=${rewriteImageUrl(product.imageUrl, "large")} alt="${product.altTxt}">
+				<img src=${imageUrl} alt="${product.altTxt}">
 			</div>
 			<div class="item__content">
 				<div class="item__content__titlePrice">
@@ -50,28 +55,42 @@ function display(product) {
 		</article>`;
 }
 
+/**
+ * Manage the product quantity input separately to clarify the main function.
+ */
 function manageQuantityInput() {
 	const quantityInput = document.querySelector("#quantity");
 
 	quantityInput.onchange = () => checkQuantityInput(quantityInput);
 }
 
+/**
+ * Manage the cart feature separately to clarify the main function.
+ * @param {Cart} cart
+ * @param {Product} product
+ */
 function manageCart(cart, product) {
 	const addToCartButton = document.querySelector("#addToCart");
 	const colorInput = document.querySelector("#colors");
 	const quantityInput = document.querySelector("#quantity");
 
 	addToCartButton.onclick = () => {
-		const id = product._id;
+		const productId = product._id;
 		const color = colorInput.value;
 		const quantity = Number(quantityInput.value);
 
-		const initialQuantity = cart.hasProduct(id, color)
-			? cart.getProduct(id, color).quantity
+		/* const cartProduct = new CartProduct({
+			productId: productId,
+			color: colorInput.value,
+			quantity: Number(quantityInput.value),
+		}); */
+
+		const initialQuantity = cart.hasProduct(productId, color)
+			? cart.getProduct(productId, color).quantity
 			: 0;
 
 		const productAdded = cart.addProduct({
-			id: id,
+			productId: productId,
 			color: color,
 			quantity: quantity,
 		});
@@ -86,34 +105,19 @@ function manageCart(cart, product) {
 }
 
 async function main() {
+	// load the configuration data and assign them to the "Config" class directly to create some static properties
+	Object.assign(Config, await loadConfig());
+
 	const searchParams = new URLSearchParams(window.location.search);
 	const product = new Product(
 		await getProductById(searchParams.get("id")).catch(console.error)
 	);
-	const cart = new Cart(await getCart());
+	const cart = new Cart(getCart());
 
 	display(product);
 	updateCartLink(cart.totalQuantity);
 	manageQuantityInput();
 	manageCart(cart, product);
-
-	/* if (searchParams.has("id")) {
-		const object = await getProductById(searchParams.get("id"));
-
-		// check if object is empty or not
-		if (Object.keys(object).length) {
-			const product = new Product(object);
-
-			display(product);
-			updateCartLink();
-			manageQuantityInput();
-			manageCart(product);
-		} else {
-			productContainer.innerHTML = "Oups, produit introuvable...";
-		}
-	} else {
-		productContainer.innerHTML = "Oups, aucun produit sélectionné...";
-	} */
 }
 
 main();

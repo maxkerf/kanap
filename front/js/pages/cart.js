@@ -1,28 +1,35 @@
-const productsContainer = document.querySelector("#cart__items");
-const totalQuantityDisplayer = document.querySelector("#totalQuantity");
-const totalPriceDisplayer = document.querySelector("#totalPrice");
+/**
+ * Display on the page the products stored in the cart.
+ * @param {CartProduct[]} cartProducts - An array of cart products.
+ * @param {ProductManager} productManager - A product manager containing an array of products.
+ */
+function display(cartProducts, productManager) {
+	const productsContainer = document.querySelector("#cart__items");
 
-function display(products) {
-	if (products.length) {
+	if (cartProducts.length) {
 		productsContainer.innerHTML = `<div class="empty-cart-btn">Vider le panier</div>`;
 
-		products.forEach(product => {
-			productsContainer.innerHTML += `<article class="cart__item" data-id=${
-				product.id
-			} data-color=${product.color}>
+		cartProducts.forEach(cartProduct => {
+			const productId = cartProduct.productId;
+			const product = productManager.getProduct(productId);
+			const imageUrl = rewriteImageUrl(product.imageUrl, "medium");
+
+			productsContainer.innerHTML += `<article class="cart__item" data-productId=${productId} data-color=${
+				cartProduct.color
+			}>
 			<div class="cart__item__img">
-				<img src=${rewriteImageUrl(product.imageUrl, "medium")} alt="${product.altTxt}">
+				<img src=${imageUrl} alt="${product.altTxt}">
 			</div>
 			<div class="cart__item__content">
 				<div class="cart__item__content__titlePrice">
-					<h2>${product.name + " " + product.color}</h2>
+					<h2>${product.name + " " + cartProduct.color}</h2>
 					<p>${product.price} €</p>
 				</div>
 				<div class="cart__item__content__settings">
 					<div class="cart__item__content__settings__quantity">
 						<p>Quantité : </p>
 						<input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value=${
-							product.quantity
+							cartProduct.quantity
 						}>
 					</div>
 					<div class="cart__item__content__settings__delete">
@@ -37,6 +44,11 @@ function display(products) {
 	}
 }
 
+/**
+ * Manage the product quantity inputs separately to clarify the main function.
+ * @param {Cart} cart
+ * @param {ProductManager} productManager
+ */
 function manageQuantityInputs(cart, productManager) {
 	const quantityInputs = document.querySelectorAll(".itemQuantity");
 
@@ -45,17 +57,17 @@ function manageQuantityInputs(cart, productManager) {
 			checkQuantityInput(quantityInput);
 
 			const productContainer = quantityInput.closest(".cart__item");
-			const id = productContainer.dataset.id;
+			const productId = productContainer.dataset.productId;
 			const color = productContainer.dataset.color;
 
-			const productInCart = cart.getProduct(id, color);
-			const initialQuantity = productInCart.quantity;
-			productInCart.quantity = Number(quantityInput.value);
+			const cartProduct = cart.getProduct(productId, color);
+			const initialQuantity = cartProduct.quantity;
+			cartProduct.quantity = Number(quantityInput.value);
 
 			cart.updateTotals(
-				productManager.getProduct(id).price,
+				productManager.getProduct(productId).price,
 				initialQuantity,
-				productInCart.quantity
+				cartProduct.quantity
 			);
 			updateTotalDisplayers(cart);
 
@@ -64,25 +76,34 @@ function manageQuantityInputs(cart, productManager) {
 	});
 }
 
+/**
+ * Manage the product delete buttons separately to clarify the main function.
+ * @param {Cart} cart
+ * @param {ProductManager} productManager
+ */
 function manageDeleteButtons(cart, productManager) {
 	const deleteButtons = document.querySelectorAll(".deleteItem");
 
 	deleteButtons.forEach(deleteButton => {
 		deleteButton.onclick = () => {
 			const productContainer = deleteButton.closest(".cart__item");
-			const id = productContainer.dataset.id;
+			const productId = productContainer.dataset.productId;
 			const color = productContainer.dataset.color;
 
-			const initialQuantity = cart.getProduct(id, color).quantity;
-			cart.removeProduct(id, color);
+			const initialQuantity = cart.getProduct(productId, color).quantity;
+			cart.removeProduct(productId, color);
 			productContainer.remove();
 
 			cart.updateTotals(
-				productManager.getProduct(id).price,
+				productManager.getProduct(productId).price,
 				initialQuantity,
 				0
 			);
 			updateTotalDisplayers(cart);
+
+			// if there is no products anymore in the cart, remove the empty cart buttons
+			if (cart.totalQuantity === 0)
+				document.querySelectorAll(".empty-cart-btn").forEach(el => el.remove());
 
 			cart.save();
 
@@ -91,12 +112,17 @@ function manageDeleteButtons(cart, productManager) {
 	});
 }
 
+/**
+ * Manage the empty cart buttons separately to clarify the main function.
+ * @param {Cart} cart
+ */
 function manageEmptyCartButtons(cart) {
 	document.querySelectorAll(".empty-cart-btn").forEach(
 		btn =>
 			(btn.onclick = () => {
 				cart.emptyCart();
 
+				// remove from the DOM the product containers and the empty cart buttons
 				document
 					.querySelectorAll(".cart__item, .empty-cart-btn")
 					.forEach(el => el.remove());
@@ -104,16 +130,78 @@ function manageEmptyCartButtons(cart) {
 				updateTotalDisplayers(cart);
 
 				cart.save();
+
+				sendMessageToUser("Votre panier a bien été vidé !");
 			})
 	);
 }
 
+/**
+ * Update the total cart quantity and total cart price displayers.
+ * @param {Cart} cart
+ */
 function updateTotalDisplayers(cart) {
+	const totalQuantityDisplayer = document.querySelector("#totalQuantity");
+	const totalPriceDisplayer = document.querySelector("#totalPrice");
+
 	totalQuantityDisplayer.innerHTML = cart.totalQuantity;
 	totalPriceDisplayer.innerHTML = cart.totalPrice.toLocaleString();
 	updateCartLink(cart.totalQuantity);
 }
 
+/**
+ * Custom the first input validation to make sure it communicates a comprehensive error.
+ */
+function customFirstNameInputValidation() {
+	const firstNameInput = document.querySelector("#firstName");
+	const validityState = firstNameInput.validity;
+
+	if (validityState.patternMismatch) {
+		firstNameInput.setCustomValidity(
+			"Le prénom ne doit pas contenir de chiffres."
+		);
+	} else {
+		firstNameInput.setCustomValidity("");
+	}
+}
+
+/**
+ * Check if all the form inputs are valid.
+ * @returns {boolean} Boolean true if the entire form is valid, false if there is at least one error.
+ */
+function isFormValid() {
+	let validForm = true;
+	let focusedInput = false; // for the moment no error so no focused input
+
+	// submit input does not need to be validated
+	const inputsToValid = document.querySelectorAll(
+		"form input:not([type=submit])"
+	);
+
+	inputsToValid.forEach(input => {
+		const validInput = input.checkValidity();
+
+		// if an error is detected, communicate an error message to the user
+		input.nextElementSibling.innerHTML = !validInput
+			? input.validationMessage
+			: "";
+
+		validForm &= validInput;
+
+		// if an error is detected and it is the first, focus the concerned input
+		if (!validInput && !focusedInput) {
+			input.focus();
+			focusedInput = true;
+		}
+	});
+
+	return validForm;
+}
+
+/**
+ * Manage the order form separately to clarify the main function.
+ * @param {Cart} cart
+ */
 function manageForm(cart) {
 	document.querySelector("form").onsubmit = async e => {
 		e.preventDefault();
@@ -131,74 +219,29 @@ function manageForm(cart) {
 
 			const products = cart.products.map(product => product.id);
 
-			const object = await postOrder({ contact, products }).catch(
-				console.error
-			);
+			const order = await postOrder({ contact, products }).catch(console.error);
 
-			cart.emptyCart();
+			cart.emptyCart(); // empty the cart after the order
 			cart.save();
 
-			window.location = "./confirmation.html?orderId=" + object.orderId;
+			window.location = "./confirmation.html?orderId=" + order.orderId;
 		}
 	};
 }
 
-function customFirstNameInputValidation() {
-	const firstNameInput = document.querySelector("#firstName");
-	const validityState = firstNameInput.validity;
-
-	if (validityState.patternMismatch) {
-		firstNameInput.setCustomValidity(
-			"Le prénom ne doit pas contenir de chiffres."
-		);
-	} else {
-		firstNameInput.setCustomValidity("");
-	}
-}
-
-function isFormValid() {
-	let validForm = true;
-	let focusedInput = false;
-
-	document.querySelectorAll("form input:not([type=submit])").forEach(input => {
-		const validInput = input.checkValidity();
-
-		input.nextElementSibling.innerHTML = !validInput
-			? input.validationMessage
-			: "";
-
-		validForm &= validInput;
-
-		if (!validForm && !focusedInput) {
-			input.focus();
-			focusedInput = true;
-		}
-	});
-
-	return validForm;
-}
-
 async function main() {
-	const cart = new Cart(await getCart());
-	const promises = cart.products.map(product => getProductById(product.id));
+	// load the configuration data and assign them to the "Config" class directly to create some static properties
+	Object.assign(Config, await loadConfig());
+
+	const cart = new Cart(getCart());
+	const promises = cart.products.map(cartProduct =>
+		getProductById(cartProduct.productId)
+	);
 	const productManager = new ProductManager(
 		await Promise.all(promises).catch(console.error)
 	);
-	const productsToDisplay = [];
 
-	for (let i = 0; i < cart.products.length; i++) {
-		productsToDisplay.push({
-			id: productManager.products[i]._id,
-			imageUrl: productManager.products[i].imageUrl,
-			altTxt: productManager.products[i].altTxt,
-			name: productManager.products[i].name,
-			price: productManager.products[i].price,
-			color: cart.products[i].color,
-			quantity: cart.products[i].quantity,
-		});
-	}
-
-	display(productsToDisplay);
+	display(cart.products, productManager);
 	updateTotalDisplayers(cart);
 	manageQuantityInputs(cart, productManager);
 	manageDeleteButtons(cart, productManager);

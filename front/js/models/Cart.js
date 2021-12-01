@@ -1,31 +1,97 @@
+/**
+ * @class
+ * @classdesc Class representing the cart.
+ */
 class Cart {
-	constructor(object) {
-		// check if object is null or not
-		object ? Object.assign(this, object) : this.emptyCart();
+	/**
+	 * Create a cart with the given data.
+	 * @param {Object} [data={ products: [], totalQuantity: 0, totalPrice: 0 }]
+	 * @param {Object[]} data.products - The products in the cart.
+	 * @param {string} data.products[].productId - The id of the product.
+	 * @param {string} data.products[].color
+	 * @param {string} data.products[].quantity
+	 * @param {number} data.totalQuantity - The total quantity of articles in the cart.
+	 * @param {number} data.totalPrice - The total cart price.
+	 */
+	constructor(data) {
+		// check if data is null or not
+		data ? Object.assign(this, data) : this.emptyCart();
 	}
 
+	/**
+	 * Check if a product is already stored in the cart or not.
+	 * @param {string} productId - The id of the desired product.
+	 * @param {string} color - The color of the desired product.
+	 * @returns {boolean} A boolean true if the product exists, false if not.
+	 */
+	hasProduct(productId, color) {
+		// same way than the "getProduct" method but the function name "hasProduct" is more explicit to just know if it exists or not
+		return this.getProduct(productId, color) ? true : false;
+	}
+
+	/**
+	 * Get a product stored in the cart.
+	 * @param {string} productId - The id of the desired product.
+	 * @param {string} color - The color of the desired product.
+	 * @returns {CartProduct} The desired product.
+	 */
+	getProduct(productId, color) {
+		return this.products.find(
+			cartProduct =>
+				cartProduct.productId === productId && cartProduct.color === color
+		);
+	}
+
+	/**
+	 * Add a product in the cart.
+	 * @param {Object} productToAdd
+	 * @param {string} productToAdd.productId
+	 * @param {string} productToAdd.color
+	 * @param {string} productToAdd.quantity
+	 * @returns {Object} The product added.
+	 */
 	addProduct(productToAdd) {
-		const id = productToAdd.id;
-		const color = productToAdd.color;
+		const productId = productToAdd.productId;
 
-		if (this.hasProduct(id, color)) {
-			const product = this.getProduct(id, color);
+		/* 
+		if the product already exists, add the quantity to the existing product
+		else add the entire product
+		*/
+		if (this.hasProduct(productId, productToAdd.color)) {
+			const cartProduct = this.getProduct(productId, productToAdd.color);
+			const maxQuantity = 100;
 
-			product.quantity + productToAdd.quantity <= 100
-				? (product.quantity += productToAdd.quantity)
-				: (product.quantity = 100);
+			// check if the quantity added does not exceed the maximum quantity
+			cartProduct.quantity + productToAdd.quantity <= maxQuantity
+				? (cartProduct.quantity += productToAdd.quantity)
+				: (cartProduct.quantity = maxQuantity);
 		} else {
-			this.products.push(productToAdd);
+			productToAdd.id = this.products.length
+				? this.products[this.products.length - 1].id + 1
+				: 1;
+			this.products.push(new CartProduct(productToAdd));
 		}
 
-		return this.getProduct(id, color);
+		return this.getProduct(productId, productToAdd.color);
 	}
 
-	removeProduct(id, color) {
-		const product = this.getProduct(id, color);
-		this.products.splice(this.products.indexOf(product), 1);
+	/**
+	 * Remove a product from the cart.
+	 * @param {string} productId - The id of the product to remove.
+	 * @param {string} color - The color of the product to remove.
+	 */
+	removeProduct(productId, color) {
+		const cartProduct = this.getProduct(productId, color);
+
+		this.products.splice(this.products.indexOf(cartProduct), 1);
 	}
 
+	/**
+	 * Update the total price cart and the total articles in the cart.
+	 * @param {number} price - The product price.
+	 * @param {string} initialQuantity - The product quantity in the cart before modifications (add a product, remove one, etc.).
+	 * @param {string} currentQuantity - The product quantity in the cart after modifications (add a product, remove one, etc.).
+	 */
 	updateTotals(price, initialQuantity, currentQuantity) {
 		const quantityDifference = currentQuantity - initialQuantity;
 
@@ -33,28 +99,17 @@ class Cart {
 		this.totalPrice += price * quantityDifference;
 	}
 
-	getProduct(id, color) {
-		return this.products.find(
-			product => product.id === id && product.color === color
-		);
-	}
-
-	hasProduct(id, color) {
-		return this.getProduct(id, color);
-	}
-
+	/**
+	 * Empty the cart or create an empty cart, it depends on the situation.
+	 */
 	emptyCart() {
 		Object.assign(this, { products: [], totalQuantity: 0, totalPrice: 0 });
 	}
 
+	/**
+	 * Save the current cart data in the local storage.
+	 */
 	save() {
-		localStorage.setItem(
-			"kanap-cart",
-			JSON.stringify({
-				products: this.products,
-				totalQuantity: this.totalQuantity,
-				totalPrice: this.totalPrice,
-			})
-		);
+		localStorage.setItem(Config.keyCart, JSON.stringify(this));
 	}
 }
