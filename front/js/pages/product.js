@@ -79,12 +79,6 @@ function manageCart(cart, product) {
 		const color = colorInput.value;
 		const quantity = Number(quantityInput.value);
 
-		/* const cartProduct = new CartProduct({
-			productId: productId,
-			color: colorInput.value,
-			quantity: Number(quantityInput.value),
-		}); */
-
 		const initialQuantity = cart.hasProduct(productId, color)
 			? cart.getProduct(productId, color).quantity
 			: 0;
