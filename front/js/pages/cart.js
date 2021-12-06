@@ -1,4 +1,18 @@
 /**
+ * Create a button to empty the cart.
+ * @returns {HTMLDivElement} The empty cart button.
+ */
+function createEmptyCartButton() {
+	const container = document.createElement("div");
+	const content = document.createTextNode("Vider le panier");
+
+	container.appendChild(content);
+	container.classList.add("empty-cart-btn");
+
+	return container;
+}
+
+/**
  * Display on the page the products stored in the cart.
  * @param {CartProduct[]} cartProducts - An array of cart products.
  * @param {ProductManager} productManager - A product manager containing an array of products.
@@ -7,7 +21,7 @@ function display(cartProducts, productManager) {
 	const productsContainer = document.querySelector("#cart__items");
 
 	if (cartProducts.length) {
-		productsContainer.innerHTML = `<div class="empty-cart-btn">Vider le panier</div>`;
+		productsContainer.appendChild(createEmptyCartButton());
 
 		cartProducts.forEach(cartProduct => {
 			const productId = cartProduct.productId;
@@ -40,7 +54,7 @@ function display(cartProducts, productManager) {
 		</article>`;
 		});
 
-		productsContainer.innerHTML += `<div class="empty-cart-btn">Vider le panier</div>`;
+		productsContainer.appendChild(createEmptyCartButton());
 	}
 }
 
