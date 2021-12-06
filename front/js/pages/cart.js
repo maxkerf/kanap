@@ -163,18 +163,66 @@ function updateTotalDisplayers(cart) {
 }
 
 /**
- * Custom the first input validation to make sure it communicates a comprehensive error.
+ * Custom the first name input validation to make sure it communicates a comprehensive error.
  */
 function customFirstNameInputValidation() {
-	const firstNameInput = document.querySelector("#firstName");
-	const validityState = firstNameInput.validity;
+	const input = document.querySelector("#firstName");
+	const validityState = input.validity;
 
 	if (validityState.patternMismatch) {
-		firstNameInput.setCustomValidity(
+		input.setCustomValidity(
 			"Le prénom ne doit pas contenir de chiffres ni de caractères de ponctuation excepté le tiret (-)."
 		);
 	} else {
-		firstNameInput.setCustomValidity("");
+		input.setCustomValidity("");
+	}
+}
+
+/**
+ * Custom the last name input validation to make sure it communicates a comprehensive error.
+ */
+function customLastNameInputValidation() {
+	const input = document.querySelector("#lastName");
+	const validityState = input.validity;
+
+	if (validityState.patternMismatch) {
+		input.setCustomValidity(
+			"Le nom ne doit pas contenir de chiffres ni de caractères de ponctuation excepté le tiret (-)."
+		);
+	} else {
+		input.setCustomValidity("");
+	}
+}
+
+/**
+ * Custom the address input validation to make sure it communicates a comprehensive error.
+ */
+function customAddressInputValidation() {
+	const input = document.querySelector("#address");
+	const validityState = input.validity;
+
+	if (validityState.patternMismatch) {
+		input.setCustomValidity(
+			"L'adresse ne doit pas contenir de caractères de ponctuation excepté le tiret (-)."
+		);
+	} else {
+		input.setCustomValidity("");
+	}
+}
+
+/**
+ * Custom the city input validation to make sure it communicates a comprehensive error.
+ */
+function customCityInputValidation() {
+	const input = document.querySelector("#city");
+	const validityState = input.validity;
+
+	if (validityState.patternMismatch) {
+		input.setCustomValidity(
+			"La ville ne doit pas contenir de chiffres ni de caractères de ponctuation excepté le tiret (-)."
+		);
+	} else {
+		input.setCustomValidity("");
 	}
 }
 
@@ -220,6 +268,9 @@ function manageForm(cart) {
 		e.preventDefault();
 
 		customFirstNameInputValidation();
+		customLastNameInputValidation();
+		customAddressInputValidation();
+		customCityInputValidation();
 
 		if (isFormValid()) {
 			const contact = {
