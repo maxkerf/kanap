@@ -157,7 +157,7 @@ function customFirstNameInputValidation() {
 
 	if (validityState.patternMismatch) {
 		firstNameInput.setCustomValidity(
-			"Le prénom ne doit pas contenir de chiffres."
+			"Le prénom ne doit pas contenir de chiffres ni de caractères de ponctuation excepté le tiret (-)."
 		);
 	} else {
 		firstNameInput.setCustomValidity("");
