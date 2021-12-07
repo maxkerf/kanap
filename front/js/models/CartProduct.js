@@ -11,8 +11,7 @@ class CartProduct {
 	 * @param {string} data.color
 	 * @param {number} data.quantity
 	 */
-	constructor(data, id) {
-		this.id = id;
+	constructor(data) {
 		Object.assign(this, data);
 	}
 }

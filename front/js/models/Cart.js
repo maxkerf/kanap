@@ -47,7 +47,7 @@ class Cart {
 	 * @param {Object} productToAdd
 	 * @param {string} productToAdd.productId
 	 * @param {string} productToAdd.color
-	 * @param {string} productToAdd.quantity
+	 * @param {number} productToAdd.quantity
 	 * @returns {Object} The product added.
 	 */
 	addProduct(productToAdd) {
