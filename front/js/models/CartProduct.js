@@ -1,3 +1,7 @@
+/**
+ * @class
+ * @classdesc Class representing a product in the cart.
+ */
 class CartProduct {
 	/**
 	 * Create a cart product with the given data.
