@@ -22,7 +22,7 @@ async function getProductById(id) {
 }
 
 /**
- * Post an order
+ * Post an order.
  * @param {Object} order - The order to pass.
  * @param {Object} order.contact - Buyer informations.
  * @param {string} order.contact.firstName - Buyer first name.
@@ -30,7 +30,7 @@ async function getProductById(id) {
  * @param {string} order.contact.address - Buyer address.
  * @param {string} order.contact.city - Buyer city.
  * @param {string} order.contact.email - Buyer email.
- * @param {number[]} order.products - An id list of the desired products.
+ * @param {string[]} order.products - An id list of the desired products.
  * @returns {Promise} The order with an order id.
  */
 async function postOrder(order) {
