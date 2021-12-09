@@ -91,6 +91,24 @@ function manageQuantityInputs(cart, productManager) {
 }
 
 /**
+ * Remove all the product containers (so all the products) from the DOM.
+ */
+function removeAllProductContainers() {
+	const productContainers = document.querySelectorAll(".cart__item");
+
+	productContainers.forEach(productContainer => productContainer.remove());
+}
+
+/**
+ * Remove from the DOM the empty cart buttons.
+ */
+function removeEmptyCartButtons() {
+	const emptyCartButtons = document.querySelectorAll(".empty-cart-btn");
+
+	emptyCartButtons.forEach(emptyCartButton => emptyCartButton.remove());
+}
+
+/**
  * Manage the product delete buttons separately to clarify the main function.
  * @param {Cart} cart
  * @param {ProductManager} productManager
@@ -103,6 +121,7 @@ function manageDeleteButtons(cart, productManager) {
 			const productContainer = deleteButton.closest(".cart__item");
 			const productId = productContainer.dataset.id;
 			const color = productContainer.dataset.color;
+
 			const initialQuantity = cart.getProduct(productId, color).quantity;
 			cart.removeProduct(productId, color);
 			productContainer.remove();
@@ -115,8 +134,7 @@ function manageDeleteButtons(cart, productManager) {
 			updateTotalDisplayers(cart);
 
 			// if there is no products anymore in the cart, remove the empty cart buttons
-			if (cart.totalQuantity === 0)
-				document.querySelectorAll(".empty-cart-btn").forEach(el => el.remove());
+			if (!cart.totalQuantity) removeEmptyCartButtons();
 
 			cart.save();
 
@@ -130,23 +148,21 @@ function manageDeleteButtons(cart, productManager) {
  * @param {Cart} cart
  */
 function manageEmptyCartButtons(cart) {
-	document.querySelectorAll(".empty-cart-btn").forEach(
-		btn =>
-			(btn.onclick = () => {
-				cart.emptyCart();
+	const emptyCartButtons = document.querySelectorAll(".empty-cart-btn");
 
-				// remove from the DOM the product containers and the empty cart buttons
-				document
-					.querySelectorAll(".cart__item, .empty-cart-btn")
-					.forEach(el => el.remove());
+	emptyCartButtons.forEach(emptyCartButton => {
+		emptyCartButton.onclick = () => {
+			cart.emptyCart();
 
-				updateTotalDisplayers(cart);
+			updateTotalDisplayers(cart);
+			removeAllProductContainers();
+			removeEmptyCartButtons();
 
-				cart.save();
+			cart.save();
 
-				sendMessageToUser("Votre panier a bien été vidé !");
-			})
-	);
+			sendMessageToUser("Votre panier a bien été vidé !");
+		};
+	});
 }
 
 /**
