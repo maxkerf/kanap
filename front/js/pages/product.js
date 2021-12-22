@@ -4,55 +4,35 @@
  */
 function display(product) {
 	const productContainer = document.querySelector(".item");
-	const imageUrl = rewriteImageUrl(product.imageUrl, "large");
-	const colors = product.colors
-		.map(color => "<option value=" + color + ">" + color + "</option>")
-		.join("\n");
 
-	document.title = product.name;
-	productContainer.innerHTML = `<article>
-			<div class="item__img">
-				<img src=${imageUrl} alt="${product.altTxt}">
-			</div>
-			<div class="item__content">
-				<div class="item__content__titlePrice">
-					<h1 id="title">${product.name}</h1>
-					<p>Prix : <span id="price">${product.price}</span>€</p>
-				</div>
+	if (Object.keys(product).length) {
+		const imageContainer = document.querySelector(".item__img");
+		const title = document.querySelector("#title");
+		const price = document.querySelector("#price");
+		const description = document.querySelector("#description");
+		const colors = document.querySelector("#colors");
 
-				<div class="item__content__description">
-					<p class="item__content__description__title">Description :</p>
-					<p id="description">${product.description}</p>
-				</div>
+		document.title = product.name;
 
-				<div class="item__content__settings">
-					<div class="item__content__settings__color">
-						<label for="color-select">Choisir une couleur :</label>
-						<select name="color-select" id="colors">
-							${colors}
-						</select>
-					</div>
+		const image = document.createElement("img");
+		const imageUrl = rewriteImageUrl(product.imageUrl, "large");
+		image.src = imageUrl;
+		image.alt = product.altTxt;
+		imageContainer.append(image);
 
-					<div class="item__content__settings__quantity">
-						<label for="itemQuantity"
-							>Nombre d'article(s) (1-100) :</label
-						>
-						<input
-							type="number"
-							name="itemQuantity"
-							min="1"
-							max="100"
-							value="1"
-							id="quantity"
-						/>
-					</div>
-				</div>
+		title.innerText = product.name;
+		price.innerText = product.price;
+		description.innerText = product.description;
 
-				<div class="item__content__addButton">
-					<button id="addToCart">Ajouter au panier</button>
-				</div>
-			</div>
-		</article>`;
+		product.colors.forEach(color => {
+			const option = document.createElement("option");
+			option.value = color;
+			option.innerText = color;
+			colors.append(option);
+		});
+	} else {
+		productContainer.innerText = "Produit introuvable...";
+	}
 }
 
 /**
@@ -110,8 +90,11 @@ async function main() {
 
 	display(product);
 	updateCartLink(cart.totalQuantity);
-	manageQuantityInput();
-	manageCart(cart, product);
+
+	if (Object.keys(product).length) {
+		manageQuantityInput();
+		manageCart(cart, product);
+	}
 }
 
 main();

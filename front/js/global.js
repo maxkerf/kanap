@@ -34,7 +34,7 @@ function sendMessageToUser(message) {
  * @param {number} totalQuantity - Total quantity of articles in the cart.
  */
 function updateCartLink(totalQuantity) {
-	document.querySelector("#cart-link span").innerHTML = totalQuantity
+	document.querySelector("#cart-link span").innerText = totalQuantity
 		? ` (${totalQuantity})`
 		: "";
 }

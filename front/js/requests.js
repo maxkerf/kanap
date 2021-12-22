@@ -15,6 +15,8 @@ async function getAllProducts() {
  * @returns {Promise} The desired product.
  */
 async function getProductById(id) {
+	if (!id) throw "Product ID missing...";
+
 	const response = await fetch(Config.host + "/api/products/" + id);
 	const data = await response.json();
 

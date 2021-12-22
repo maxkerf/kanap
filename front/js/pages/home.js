@@ -6,15 +6,29 @@ function display(products) {
 	const productsContainer = document.querySelector("#items");
 
 	products.forEach(product => {
-		const imageUrl = rewriteImageUrl(product.imageUrl, "small");
+		const productContainer = document.createElement("a");
+		productContainer.href = `./product.html?id=${product._id}`;
 
-		productsContainer.innerHTML += `<a href="./product.html?id=${product._id}">
-			<article>
-				<img src=${imageUrl} alt="${product.altTxt}" />
-				<h3 class="productName">${product.name}</h3>
-				<p class="productDescription">${product.description}</p>
-			</article>
-		</a>`;
+		const article = document.createElement("article");
+
+		const image = document.createElement("img");
+		const imageUrl = rewriteImageUrl(product.imageUrl, "small");
+		image.src = imageUrl;
+		image.alt = product.altTxt;
+
+		const name = document.createElement("h3");
+		name.classList.add("productName");
+		name.innerText = product.name;
+
+		const description = document.createElement("p");
+		description.classList.add("productDescription");
+		description.innerText = product.description;
+
+		article.append(image);
+		article.append(name);
+		article.append(description);
+		productContainer.append(article);
+		productsContainer.append(productContainer);
 	});
 }
 

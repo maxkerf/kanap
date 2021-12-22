@@ -3,13 +3,11 @@
  * @returns {HTMLDivElement} The empty cart button.
  */
 function createEmptyCartButton() {
-	const container = document.createElement("div");
-	const content = document.createTextNode("Vider le panier");
+	const button = document.createElement("div");
+	button.classList.add("empty-cart-btn");
+	button.innerText = "Vider le panier";
 
-	container.appendChild(content);
-	container.classList.add("empty-cart-btn");
-
-	return container;
+	return button;
 }
 
 /**
@@ -21,40 +19,75 @@ function display(cartProducts, productManager) {
 	const productsContainer = document.querySelector("#cart__items");
 
 	if (cartProducts.length) {
-		productsContainer.appendChild(createEmptyCartButton());
+		productsContainer.append(createEmptyCartButton());
 
 		cartProducts.forEach(cartProduct => {
 			const productId = cartProduct.productId;
 			const product = productManager.getProduct(productId);
-			const imageUrl = rewriteImageUrl(product.imageUrl, "medium");
 
-			productsContainer.innerHTML += `<article class="cart__item" data-id=${productId} data-color=${
-				cartProduct.color
-			}>
-			<div class="cart__item__img">
-				<img src=${imageUrl} alt="${product.altTxt}">
-			</div>
-			<div class="cart__item__content">
-				<div class="cart__item__content__titlePrice">
-					<h2>${product.name + " " + cartProduct.color}</h2>
-					<p>${product.price} €</p>
-				</div>
-				<div class="cart__item__content__settings">
-					<div class="cart__item__content__settings__quantity">
-						<p>Quantité : </p>
-						<input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value=${
-							cartProduct.quantity
-						}>
-					</div>
-					<div class="cart__item__content__settings__delete">
-						<p class="deleteItem">Supprimer</p>
-					</div>
-				</div>
-			</div>
-		</article>`;
+			const productContainer = document.createElement("article");
+			productContainer.classList.add("cart__item");
+			productContainer.dataset.id = productId;
+			productContainer.dataset.color = cartProduct.color;
+
+			const imageContainer = document.createElement("div");
+			imageContainer.classList.add("cart__item__img");
+			const image = document.createElement("img");
+			const imageUrl = rewriteImageUrl(product.imageUrl, "medium");
+			image.src = imageUrl;
+			image.alt = product.altTxt;
+			imageContainer.append(image);
+
+			const content = document.createElement("div");
+			content.classList.add("cart__item__content");
+
+			const titleAndPriceContainer = document.createElement("div");
+			titleAndPriceContainer.classList.add("cart__item__content__titlePrice");
+			const title = document.createElement("h2");
+			title.innerText = `${product.name} ${cartProduct.color}`;
+			const price = document.createElement("p");
+			price.innerText = `${product.price} €`;
+			titleAndPriceContainer.append(title);
+			titleAndPriceContainer.append(price);
+
+			const settings = document.createElement("div");
+			settings.classList.add("cart__item__content__settings");
+
+			const quantityContainer = document.createElement("div");
+			quantityContainer.classList.add(
+				"cart__item__content__settings__quantity"
+			);
+			const quantityLabel = document.createElement("p");
+			quantityLabel.innerText = "Quantité :";
+			const quantityInput = document.createElement("input");
+			quantityInput.classList.add("itemQuantity");
+			quantityInput.type = "number";
+			quantityInput.name = "itemQuantity";
+			quantityInput.min = "1";
+			quantityInput.max = "100";
+			quantityInput.value = cartProduct.quantity;
+			quantityContainer.append(quantityLabel);
+			quantityContainer.append(quantityInput);
+
+			const deleteContainer = document.createElement("div");
+			deleteContainer.classList.add("cart__item__content__settings__delete");
+			const deleteButton = document.createElement("p");
+			deleteButton.classList.add("deleteItem");
+			deleteButton.innerText = "Supprimer";
+			deleteContainer.append(deleteButton);
+
+			settings.append(quantityContainer);
+			settings.append(deleteContainer);
+
+			content.append(titleAndPriceContainer);
+			content.append(settings);
+
+			productContainer.append(imageContainer);
+			productContainer.append(content);
+			productsContainer.append(productContainer);
 		});
 
-		productsContainer.appendChild(createEmptyCartButton());
+		productsContainer.append(createEmptyCartButton());
 	}
 }
 
@@ -173,8 +206,8 @@ function updateTotalDisplayers(cart) {
 	const totalQuantityDisplayer = document.querySelector("#totalQuantity");
 	const totalPriceDisplayer = document.querySelector("#totalPrice");
 
-	totalQuantityDisplayer.innerHTML = cart.totalQuantity;
-	totalPriceDisplayer.innerHTML = cart.totalPrice.toLocaleString();
+	totalQuantityDisplayer.innerText = cart.totalQuantity;
+	totalPriceDisplayer.innerText = cart.totalPrice.toLocaleString();
 	updateCartLink(cart.totalQuantity);
 }
 
@@ -259,7 +292,7 @@ function isFormValid() {
 		const validInput = input.checkValidity();
 
 		// if an error is detected, communicate an error message to the user
-		input.nextElementSibling.innerHTML = !validInput
+		input.nextElementSibling.innerText = !validInput
 			? input.validationMessage
 			: "";
 
