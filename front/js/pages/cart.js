@@ -65,9 +65,13 @@ function display(cartProducts, productManager) {
 			quantityInput.name = "itemQuantity";
 			quantityInput.min = "1";
 			quantityInput.max = "100";
+			quantityInput.required = true;
 			quantityInput.value = cartProduct.quantity;
+			const quantityErrorMessage = document.createElement("div");
+			quantityErrorMessage.classList.add("quantity-error-message");
 			quantityContainer.append(quantityLabel);
 			quantityContainer.append(quantityInput);
+			quantityContainer.append(quantityErrorMessage);
 
 			const deleteContainer = document.createElement("div");
 			deleteContainer.classList.add("cart__item__content__settings__delete");
@@ -101,24 +105,24 @@ function manageQuantityInputs(cart, productManager) {
 
 	quantityInputs.forEach(quantityInput => {
 		quantityInput.onchange = () => {
-			checkQuantityInput(quantityInput);
+			if (checkInput(quantityInput)) {
+				const productContainer = quantityInput.closest(".cart__item");
+				const productId = productContainer.dataset.id;
+				const color = productContainer.dataset.color;
 
-			const productContainer = quantityInput.closest(".cart__item");
-			const productId = productContainer.dataset.id;
-			const color = productContainer.dataset.color;
+				const cartProduct = cart.getProduct(productId, color);
+				const initialQuantity = cartProduct.quantity;
+				cartProduct.quantity = Number(quantityInput.value);
 
-			const cartProduct = cart.getProduct(productId, color);
-			const initialQuantity = cartProduct.quantity;
-			cartProduct.quantity = Number(quantityInput.value);
+				cart.updateTotals(
+					productManager.getProduct(productId).price,
+					initialQuantity,
+					cartProduct.quantity
+				);
+				updateTotalDisplayers(cart);
 
-			cart.updateTotals(
-				productManager.getProduct(productId).price,
-				initialQuantity,
-				cartProduct.quantity
-			);
-			updateTotalDisplayers(cart);
-
-			cart.save();
+				cart.save();
+			}
 		};
 	});
 }
@@ -276,36 +280,26 @@ function customCityInputValidation() {
 }
 
 /**
- * Check if all the form inputs are valid.
- * @returns {boolean} Boolean true if the entire form is valid, false if there is at least one error.
+ * Check if all the inputs are valid and if not focus the first invalid one.
+ * @returns {boolean} Boolean true if all the inputs are valid, false if there is at least one error.
  */
-function isFormValid() {
-	let validForm = true;
-	let focusedInput = false; // for the moment no error so no focused input
+function checkInputs(inputs) {
+	let areInputsValid = true; // suppose all the inputs are valid at the beginning
+	let isInputFocused = false; // for the moment no error so no focused input
 
-	// submit input does not need to be validated
-	const inputsToValid = document.querySelectorAll(
-		"form input:not([type=submit])"
-	);
-
-	inputsToValid.forEach(input => {
-		const validInput = input.checkValidity();
-
-		// if an error is detected, communicate an error message to the user
-		input.nextElementSibling.innerText = !validInput
-			? input.validationMessage
-			: "";
-
-		validForm &= validInput;
+	inputs.forEach(input => {
+		const isInputValid = checkInput(input);
 
 		// if an error is detected and it is the first, focus the concerned input
-		if (!validInput && !focusedInput) {
+		if (!isInputValid && !isInputFocused) {
 			input.focus();
-			focusedInput = true;
+			isInputFocused = true;
 		}
+
+		areInputsValid &= isInputValid;
 	});
 
-	return validForm;
+	return areInputsValid;
 }
 
 /**
@@ -316,28 +310,48 @@ function manageForm(cart) {
 	document.querySelector("form").onsubmit = async e => {
 		e.preventDefault();
 
-		customFirstNameInputValidation();
-		customLastNameInputValidation();
-		customAddressInputValidation();
-		customCityInputValidation();
+		// first, check if the cart is empty
+		if (!cart.isEmpty()) {
+			// second, custom the inputs validation to make sure they communicate a comprehensive error
+			customFirstNameInputValidation();
+			customLastNameInputValidation();
+			customAddressInputValidation();
+			customCityInputValidation();
 
-		if (isFormValid()) {
-			const contact = {
-				firstName: document.querySelector("#firstName").value,
-				lastName: document.querySelector("#lastName").value,
-				address: document.querySelector("#address").value,
-				city: document.querySelector("#city").value,
-				email: document.querySelector("#email").value,
-			};
+			// third, check if the order is valid
+			const cartInputs = ".itemQuantity";
+			const formInputs = "form input:not([type=submit])"; // submit input does not need to be validated
+			const inputsToValid = document.querySelectorAll(
+				`${cartInputs}, ${formInputs}`
+			);
+			const isOrderValid = checkInputs(inputsToValid);
 
-			const products = cart.products.map(cartProduct => cartProduct.productId);
+			if (isOrderValid) {
+				// finally, build the order and send it to the server
+				const contact = {
+					firstName: document.querySelector("#firstName").value,
+					lastName: document.querySelector("#lastName").value,
+					address: document.querySelector("#address").value,
+					city: document.querySelector("#city").value,
+					email: document.querySelector("#email").value,
+				};
 
-			const order = await postOrder({ contact, products }).catch(console.error);
+				const products = cart.products.map(
+					cartProduct => cartProduct.productId
+				);
 
-			cart.emptyCart(); // empty the cart after the order
-			cart.save();
+				const order = await postOrder({ contact, products }).catch(
+					console.error
+				);
 
-			window.location = "./confirmation.html?orderId=" + order.orderId;
+				cart.emptyCart(); // empty the cart after the order is sent
+				cart.save();
+
+				// redirect the user to the confirmation page
+				window.location = "./confirmation.html?orderId=" + order.orderId;
+			}
+		} else {
+			sendMessageToUser("Votre panier est vide...");
 		}
 	};
 }

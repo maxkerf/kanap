@@ -62,9 +62,9 @@ class Cart {
 			const maxQuantity = 100;
 
 			// check if the quantity added does not exceed the maximum quantity
-			cartProduct.quantity + productToAdd.quantity <= maxQuantity
-				? (cartProduct.quantity += productToAdd.quantity)
-				: (cartProduct.quantity = maxQuantity);
+			cartProduct.quantity + productToAdd.quantity > maxQuantity
+				? (cartProduct.quantity = maxQuantity)
+				: (cartProduct.quantity += productToAdd.quantity);
 		} else {
 			productToAdd.id = this.products.length
 				? this.products[this.products.length - 1].id + 1
@@ -104,6 +104,14 @@ class Cart {
 	 */
 	emptyCart() {
 		Object.assign(this, { products: [], totalQuantity: 0, totalPrice: 0 });
+	}
+
+	/**
+	 * Check if the cart is empty or not.
+	 * @returns {boolean} Boolean true is the cart is empty, false if not.
+	 */
+	isEmpty() {
+		return !this.products.length;
 	}
 
 	/**

@@ -3,6 +3,11 @@
  * @param {string} message - The message to communicate.
  */
 function sendMessageToUser(message) {
+	// check if there is already a message
+	// if there is, remove it from the DOM to display properly the other one
+	const isMessage = document.querySelector("#message") ? true : false;
+	if (isMessage) document.querySelector("#message").remove();
+
 	const displayDuration = 750;
 	const durationBetween = 1250;
 	const undisplayDuration = 1000;
@@ -50,18 +55,24 @@ function rewriteImageUrl(imageUrl, size) {
 }
 
 /**
- * Check if the quantity selected by the user is between the min and max, if not, send a message to the user and replace the value by the min or the max.
- * @param {HTMLInputElement} quantityInput - The quantity input element.
+ * Check if the input is valid, if not, communicate an error message to the user next to it.
+ * @param {HTMLInputElement} input - The input element.
+ * @returns {boolean} Boolean true if the input field is valid, false if not.
  */
-function checkQuantityInput(quantityInput) {
-	const min = 1;
-	const max = 100;
+function checkInput(input) {
+	const isValid = input.checkValidity();
 
-	if (quantityInput.value < min) {
-		quantityInput.value = min;
-		sendMessageToUser("1 exemplaire au minimum");
-	} else if (quantityInput.value > max) {
-		quantityInput.value = max;
-		sendMessageToUser("100 exemplaires au maximum");
-	}
+	// if an error is detected, communicate an error message to the user
+	input.nextElementSibling.innerText = !isValid ? input.validationMessage : "";
+
+	return isValid;
+}
+
+/**
+ * Check if an object is empty or not.
+ * @param {Object} object - The object to check.
+ * @returns {boolean} Boolean true is the object is empty, false if not.
+ */
+function isObjectEmpty(object) {
+	return !Object.keys(object).length;
 }

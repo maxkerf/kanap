@@ -5,7 +5,7 @@
 function display(product) {
 	const productContainer = document.querySelector(".item");
 
-	if (Object.keys(product).length) {
+	if (!isObjectEmpty(product)) {
 		const imageContainer = document.querySelector(".item__img");
 		const title = document.querySelector("#title");
 		const price = document.querySelector("#price");
@@ -36,15 +36,6 @@ function display(product) {
 }
 
 /**
- * Manage the product quantity input separately to clarify the main function.
- */
-function manageQuantityInput() {
-	const quantityInput = document.querySelector("#quantity");
-
-	quantityInput.onchange = () => checkQuantityInput(quantityInput);
-}
-
-/**
  * Manage the cart feature separately to clarify the main function.
  * @param {Cart} cart
  * @param {Product} product
@@ -55,26 +46,28 @@ function manageCart(cart, product) {
 	const quantityInput = document.querySelector("#quantity");
 
 	addToCartButton.onclick = () => {
-		const productId = product._id;
-		const color = colorInput.value;
-		const quantity = Number(quantityInput.value);
+		if (checkInput(quantityInput)) {
+			const productId = product._id;
+			const color = colorInput.value;
+			const quantity = Number(quantityInput.value);
 
-		const initialQuantity = cart.hasProduct(productId, color)
-			? cart.getProduct(productId, color).quantity
-			: 0;
+			const initialQuantity = cart.hasProduct(productId, color)
+				? cart.getProduct(productId, color).quantity
+				: 0;
 
-		const productAdded = cart.addProduct({
-			productId: productId,
-			color: color,
-			quantity: quantity,
-		});
+			const productAdded = cart.addProduct({
+				productId: productId,
+				color: color,
+				quantity: quantity,
+			});
 
-		cart.updateTotals(product.price, initialQuantity, productAdded.quantity);
-		updateCartLink(cart.totalQuantity);
+			cart.updateTotals(product.price, initialQuantity, productAdded.quantity);
+			updateCartLink(cart.totalQuantity);
 
-		cart.save();
+			cart.save();
 
-		sendMessageToUser("Le produit a bien été ajouté à votre panier !");
+			sendMessageToUser("Le produit a bien été ajouté à votre panier !");
+		}
 	};
 }
 
@@ -91,8 +84,7 @@ async function main() {
 	display(product);
 	updateCartLink(cart.totalQuantity);
 
-	if (Object.keys(product).length) {
-		manageQuantityInput();
+	if (!isObjectEmpty(product)) {
 		manageCart(cart, product);
 	}
 }

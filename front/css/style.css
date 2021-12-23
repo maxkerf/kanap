@@ -292,3 +292,12 @@ footer .footerSecondary {
 		opacity: 0;
 	}
 }
+
+/************************/
+/*Quantity Error Message*/
+/************************/
+
+.quantity-error-message {
+	color: #fbbcbc;
+	padding: 0 0.5em;
+}
